@@ -9,8 +9,7 @@ function [Observed_mat,Miss_mat,A] = create_synthetic_data_2(h_size,w_size,Miss_
 %end
 
 %A = abs(A-1); %ここを変えれば行けるのか?
-A = read_image;
-w_size_miss = int32(w_size*Miss_rate);
+
 %Miss_pre_mat = [ones(h_size,w_size-w_size_miss),zeros(h_size,w_size_miss)];
 %Miss_vec = Miss_pre_mat(:);
 %Miss_mat = reshape(Miss_vec(randperm(h_size*w_size)),[h_size,w_size]);

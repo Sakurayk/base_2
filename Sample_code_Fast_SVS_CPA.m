@@ -17,9 +17,12 @@ addpath Tools
 
 %% 1:User Settings
 %----The size of the data is determined----
-h_size = 1000;%The horizontal size of the data (its default size is 1000)
-w_size = 1000;%The vertical size of the data (its default size is 1000)
-
+%w_size = 1000;%The vertical size of the data (its default size is 1000)
+RGB = imread('Red-brick-wall-texture-3.jpg');
+ I_2 = rgb2gray(RGB);
+%----The size of the data is determined----
+h_size = size(I_2,1);
+w_size = size(I_2,1);
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
 Miss_rate = 1;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
