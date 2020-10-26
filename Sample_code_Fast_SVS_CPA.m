@@ -22,10 +22,10 @@ RGB = imread('Red-brick-wall-texture-3.jpg');
  I_2 = rgb2gray(RGB);
 %----The size of the data is determined----
 h_size = size(I_2,1);
-w_size = size(I_2,1);
+w_size = size(I_2,2);
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
-Miss_rate = 1;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
+Miss_rate = 40;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
 
 Miss_percent = Miss_rate/100;
 
@@ -65,7 +65,7 @@ stopcri = 1e-4; % stopping criterion
 maxiter = 200; % maximum number of iteration
 
 I=ones(h_size,w_size);
-I_cheby=speye(w_size/2,h_size/2);
+I_cheby=speye(w_size/2,w_size/2);
 
 max_level = 1;
 Q=zeros(w_size/2,h_size/2);
@@ -140,16 +140,16 @@ disp('------------------------------Results------------------------------')
 disp('The results are shown.');
 figure
 subplot(2,2,1)
-imshow(Ground_Truth)
+imshow(cast(Ground_Truth,'uint8'))
 title({'Original data';['[Matrix rank:', num2str(rank),']']})
 
 subplot(2,2,2)
-imshow(V)
+imshow(cast(V,'uint8'))
 title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 
 if CPA_SVS == 1
     subplot(2,2,3)
-    imshow(U)
+    imshow(cast(U,'uint8'))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
