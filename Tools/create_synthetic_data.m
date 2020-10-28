@@ -7,17 +7,24 @@ function [Observed_mat,Miss_mat,A] = create_synthetic_data(h_size,w_size,Miss_ra
 %for i=1:rank-2
 %    A = blkdiag(A,A1);
 %end
-RGB = imread('Red-brick-wall-texture-3.jpg');
-I = rgb2gray(RGB);
-targetsize = [h_size,w_size];
-
-rectangle = centerCropWindow2d(size(I),targetsize);
-A = imcrop(I,rectangle);
-A = double(I);
+RGB = imread('modern-hexagonal-glowing-blue-medical-background-texture-pattern-honeycombs-different-level-d-rendering-illustration-futuristic-165624902.jpg');
+targetsize = [160,160];
+rectangle = centerCropWindow2d(size(RGB),targetsize);
+RGB = imcrop(RGB,rectangle);
+RGB = double(RGB);
+%RGB2HSV
+A = rgb2hsv(RGB);
+A = double(A);
+[A_R,A_G,A_B] = imsplit(A);
 %A = abs(A-1); %ここを変えれば行けるのか?
 w_size_miss = int32(w_size*Miss_rate);
 Miss_pre_mat = [ones(h_size,w_size-w_size_miss),zeros(h_size,w_size_miss)];
 Miss_vec = Miss_pre_mat(:);
 Miss_mat = reshape(Miss_vec(randperm(h_size*w_size)),[h_size,w_size]);
 
-Observed_mat = double(A).*Miss_mat;
+Observed_mat_R = double(A_R).*Miss_mat;
+Observed_mat_G = double(A_G).*Miss_mat;
+Observed_mat_B = double(A_B).*Miss_mat;
+Observed_mat = cat(3,Observed_mat_R,Observed_mat_G,Observed_mat_B);
+
+
