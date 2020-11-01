@@ -21,19 +21,19 @@ RGB = imread('Red-brick-wall-texture-3.jpg');
 I = rgb2gray(RGB);
 
 %square image
-targetsize = [size(I,1),size(I,1)];
-if rem(size(I,1),2)==1
-    targetsize = [size(I,1)-1,size(I,1)-1];
-end
+targetsize = [256,512];
+%if rem(size(I,1),2)==1
+%    targetsize = [size(I,1)-1,size(I,1)-1];
+%end
 rectangle = centerCropWindow2d(size(I),targetsize);
 I_2 = imcrop(I,rectangle);
 I_2 = double(I_2);
 
 %----The size of the data is determined----
-h_size = size(I_2,1);
-w_size = size(I_2,2);
-%h_size = 1000;%The horizontal size of the data (its default size is 1000)
-%w_size = 1000;%The vertical size of the data (its default size is 1000)
+%h_size = size(I_2,1);
+%w_size = size(I_2,2);
+h_size = 256;%The horizontal size of the data (its default size is 1000)
+w_size = 512;%The vertical size of the data (its default size is 1000)
 
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
@@ -45,7 +45,7 @@ Miss_percent = Miss_rate/100;
 [Observed_image,Miss_mat_L,Original_data_I]=create_synthetic_data_2(h_size,w_size,Miss_percent,rank,I_2);
 
 %----The used method is selected----
-CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
@@ -65,33 +65,34 @@ Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 omega = Miss_mat_L;
 omega_bar = Miss_mat_L==0;
 M_delta = zeros(h_size,w_size);
-M_delta(495:755,495:755) = 1;
+M_delta(106:135,105:135) = 1;
 M_delta = M_delta - omega_bar;
 
 %あとでベクトル化する
 
-I_vec = Original_data_I;
-L_vec = Miss_mat_L;
-M_vec = Observed_image;
-dct_observed = dct2(Observed_image);
+I_vec = reshape(Original_data_I,h_size*w_size,1);
+L_vec = reshape(Miss_mat_L,h_size*w_size,1);
+M_vec = reshape(Observed_image,h_size*w_size,1);
+Observed_vec = reshape(Observed_image,h_size*w_size,1);
+dct_observed = reshape(dct2(Observed_image),h_size*w_size,1);
 
-z1 = eye(h_size,w_size);
-z2 = dct_observed;
-z3 = Miss_mat_L;%omega
-z4 = eye(h_size,w_size);
-z5 = Miss_mat_L ==0;%omega_bar
+z1 = reshape(eye(h_size,w_size),h_size*w_size,1);
+z2 = reshape(dct_observed,h_size*w_size,1);
+z3 = reshape(Miss_mat_L,h_size*w_size,1);%omega
+z4 = reshape(eye(h_size,w_size),h_size*w_size,1);
+z5 = reshape(Miss_mat_L ==0,h_size*w_size,1);%omega_bar
 K = [z1;z2;z3;z4;z5];
-z = [z1*Observed_image;z2*Observed_image;z3*Observed_image;z4*Observed_image;z5*Observed_image];
+z = [z1.*Observed_vec;z2.*Observed_vec;z3.*Observed_vec;z4.*Observed_vec;z5.*Observed_vec];
 
-u1 = zeros(h_size,w_size);
-u2 = zeros(h_size,w_size);
-u3 = zeros(h_size,w_size);
-u4 = zeros(h_size,w_size);
-u5 = zeros(h_size,w_size);
+u1 = zeros(h_size*w_size,1);
+u2 = zeros(h_size*w_size,1);
+u3 = zeros(h_size*w_size,1);
+u4 = zeros(h_size*w_size,1);
+u5 = zeros(h_size*w_size,1);
 u = [u1',u2',u3',u4',u5']';
 
 stopcri = 1e-4; % stopping criterion
-maxiter = 20; % maximum number of iteration
+maxiter = 100; % maximum number of iteration
 
 I=ones(h_size,w_size);
 I_cheby=speye(int32(w_size/2),int32(h_size/2));
@@ -108,8 +109,7 @@ disp('ADMM is running...');
 for i = 1:maxiter
     %G=3*I+Miss_mat_L;
     %G=1./G;
-    ßß
-    L_vec_ans = (K.'*K)\K.'*(z-u);
+    L_vec_ans = (K'*K)\K'.*(z-u);
     %prox:nuclear norm
     if CPA_SVS == 1
         %----The singular value shrinkage using the CPA-based method----
