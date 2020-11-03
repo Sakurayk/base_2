@@ -8,8 +8,8 @@ function [Observed_mat,Miss_mat,A] = create_synthetic_data(h_size,w_size,Miss_ra
 %    A = blkdiag(A,A1);
 %end
 RGB = imread('modern-hexagonal-glowing-blue-medical-background-texture-pattern-honeycombs-different-level-d-rendering-illustration-futuristic-165624902.jpg');
-targetsize = [160,160];
-rectangle = centerCropWindow2d(size(RGB),targetsize);
+targetsize = [h_size,w_size];
+rectangle = centerCropWindow2d([size(RGB,1),size(RGB,2)],targetsize);
 RGB = imcrop(RGB,rectangle);
 RGB = double(RGB);
 %RGB2HSV
