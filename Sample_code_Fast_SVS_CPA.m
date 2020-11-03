@@ -27,7 +27,7 @@ I_2 = rgb2gray(RGB);
 %w_size = size(I_2,2);
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
-Miss_rate = 40;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
+Miss_rate = 30;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
 
 Miss_percent = Miss_rate/100;
 
@@ -35,7 +35,7 @@ Miss_percent = Miss_rate/100;
 [V_RGB,L,Ground_Truth]=create_synthetic_data(h_size,w_size,Miss_percent,rank);
 
 %----The used method is selected----
-CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
@@ -53,8 +53,8 @@ U_RGB = zeros(h_size,w_size,3);
 
 for k=1:3
     %% 2:Initialization of Some Variables
-    V = V_RGB(k);
-    U = U_RGB(k);
+    V = V_RGB(:,:,k);
+    U = U_RGB(:,:,k);
     Old_val = ones(h_size,w_size);
     z1 = ones(h_size,w_size);
     z2 = dct2(ones(h_size,w_size));
@@ -138,26 +138,27 @@ for k=1:3
             break;
         end
     end
+    U_RGB(:,:,k) = U;
 end
 %% 4:Representation of the results
 disp('------------------------------Results------------------------------')
 disp('The results are shown.');
 figure
 subplot(2,2,1)
-imshow(hsv2rgb(cast(Ground_Truth,'uint8')))
+imshow(cast(Ground_Truth,'uint8'))
 title({'Original data';['[Matrix rank:', num2str(rank),']']})
 
 subplot(2,2,2)
-imshow(hsv2rgb(cast(V,'uint8')))
+imshow(cast(V_RGB,'uint8'))
 title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 
 if CPA_SVS == 1
     subplot(2,2,3)
-    imshow(cast(U,'uint8'))
+    imshow(cast(U_RGB,'uint8'))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    imshow(U)
+    imshow(cast(U_RGB,'uint8'))
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 
