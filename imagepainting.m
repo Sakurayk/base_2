@@ -96,7 +96,7 @@ stopcri = 1e-4; % stopping criterion
 maxiter = 100; % maximum number of iteration
 
 I=ones(h_size,w_size);
-I_cheby=reshape(speye(int32(w_size/2),int32(h_size/2)),w_size/2*h_size/2,1);
+I_cheby=speye(int32(w_size/2),int32(h_size/2));
 
 max_level = 1;
 Q=zeros(int32(w_size/2),int32(h_size/2));
@@ -117,7 +117,7 @@ for i = 1:maxiter
         %A=U+d1;
         %A_1 = A'*A;
         A_z_1 = L_vec_ans + u1;
-        A_1 = A_z_1'*A_z_1;
+        A_1 = reshape(A_z_1,targetsize)'*reshape(A_z_1,targetsize);
         [Q,~,~,~]=dwt2(A_1,'haar');
         d=eigs(Q,1);
         if d==0
@@ -130,15 +130,15 @@ for i = 1:maxiter
         
         [A_hat]=idwt2(Q_hat,zeros(size(Q_hat)),zeros(size(Q_hat)),zeros(size(Q_hat)),'haar');
         A_hat = A_1*A_hat;
-        z1 = A_hat;
+        z1 = reshape(A_hat,h_size*w_size,1);
                 
     elseif CPA_SVS == 0
         %----The singular value shrinkage using the exact method----
         A_z_1 = L_vec_ans + u1;
-        [S_l,D,VT]=svd(A_z_1);
+        [S_l,D,VT]= svd(reshape(A_z_1,targetsize));
         D2=diag(D);
         D2=diag(sign(D2).*max(abs(D2)-0.1,0));
-        z1 = S_l*D2*VT';
+        z1 = reshape(S_l*D2*VT',h_size*w_size,1);
     end
     
     %l1norm  
@@ -147,7 +147,7 @@ for i = 1:maxiter
 
     
     %prox:Indicator
-    z3 = Observed_image;
+    z3 = Observed_vec;
     %元のピクセルを維持する
     
     %prox:range
@@ -156,7 +156,7 @@ for i = 1:maxiter
     C(C>=1)=1;
     z4 = C;
     
-    M_val = mean(omega_bar*L_vec_ans+u5,'all')-sum((M_delta*Observed_image),'all')/(sum(M_delta,'all'));
+    M_val = mean(omega_bar.*L_vec_ans+u5,'all')-sum((M_delta.*Observed_vec),'all')/(sum(M_delta,'all'));
     z5 = z5+omega_bar*M_val;
     
     u = u + K*L_vec_ans - [z1;z2;z3;z4;z5];
