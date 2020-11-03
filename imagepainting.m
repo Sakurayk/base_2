@@ -20,20 +20,19 @@ addpath Tools
 RGB = imread('Red-brick-wall-texture-3.jpg');
 I = rgb2gray(RGB);
 
+%----The size of the data is determined----
+%h_size = size(I_2,1);
+%w_size = size(I_2,2);
+h_size = 60;%The horizontal size of the data (its default size is 1000)
+w_size = 60;%The vertical size of the data (its default size is 1000)
 %square image
-targetsize = [256,512];
+targetsize = [h_size,w_size];
 %if rem(size(I,1),2)==1
 %    targetsize = [size(I,1)-1,size(I,1)-1];
 %end
 rectangle = centerCropWindow2d(size(I),targetsize);
 I_2 = imcrop(I,rectangle);
 I_2 = double(I_2);
-
-%----The size of the data is determined----
-%h_size = size(I_2,1);
-%w_size = size(I_2,2);
-h_size = 256;%The horizontal size of the data (its default size is 1000)
-w_size = 512;%The vertical size of the data (its default size is 1000)
 
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
@@ -65,25 +64,26 @@ Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 omega = reshape(Miss_mat_L,h_size*w_size,1);
 omega_bar = reshape(Miss_mat_L==0,h_size*w_size,1);
 M_delta = zeros(h_size,w_size);
-M_delta(106:135,105:135) = 1;
+M_delta(28:37,28:37) = 1;
 M_delta = reshape(M_delta,h_size*w_size,1);
 M_delta = M_delta - omega_bar;
 
 %あとでベクトル化する
 
-I_vec = reshape(Original_data_I,h_size*w_size,1);
-L_vec = reshape(Miss_mat_L,h_size*w_size,1);
-M_vec = reshape(Observed_image,h_size*w_size,1);
+L_vec = reshape(Original_data_I,h_size*w_size,1);
+M_vec = reshape(Miss_mat_L,h_size*w_size,1);
+I_vec = reshape(Observed_image,h_size*w_size,1);
+T = dwt2(dct2(Observed_image),'haar');
 Observed_vec = reshape(Observed_image,h_size*w_size,1);
-dct_observed = reshape(dct2(Observed_image),h_size*w_size,1);
+dct_observed = dct2(Observed_image);
 
-z1 = reshape(eye(h_size,w_size),h_size*w_size,1);
-z2 = reshape(dct_observed,h_size*w_size,1);
-z3 = reshape(Miss_mat_L,h_size*w_size,1);%omega
-z4 = reshape(eye(h_size,w_size),h_size*w_size,1);
-z5 = reshape(Miss_mat_L ==0,h_size*w_size,1);%omega_bar
-K = [z1;z2;z3;z4;z5];
-z = [z1.*Observed_vec;z2.*Observed_vec;z3.*Observed_vec;z4.*Observed_vec;z5.*Observed_vec];
+K1 = eye(h_size*w_size,h_size*w_size);
+K2 = dctmtx(h_size*w_size);
+K3 = diag(reshape(Miss_mat_L,h_size*w_size,1));%omega
+K4 =eye(h_size*w_size,h_size*w_size);
+K5 =diag(reshape(Miss_mat_L==0,h_size*w_size,1));%omega_bar
+K = [K1;K2;K3;K4;K5];
+z = K*I_vec;
 
 u1 = zeros(h_size*w_size,1);
 u2 = zeros(h_size*w_size,1);
@@ -93,7 +93,7 @@ u5 = zeros(h_size*w_size,1);
 u = [u1',u2',u3',u4',u5']';
 
 stopcri = 1e-4; % stopping criterion
-maxiter = 100; % maximum number of iteration
+maxiter = 5; % maximum number of iteration
 
 I=ones(h_size,w_size);
 I_cheby=speye(int32(w_size/2),int32(h_size/2));
@@ -142,8 +142,8 @@ for i = 1:maxiter
     end
     
     %l1norm  
-    B=dct_observed*L_vec_ans+u2;
-    z2 = sign(B).*max(abs(B)-0.1,0);
+    B=K2*L_vec_ans+u2;
+    z2 = sign(B).*max(abs(B)-0.01,0);
 
     
     %prox:Indicator
@@ -157,14 +157,14 @@ for i = 1:maxiter
     z4 = C;
     
     M_val = mean(omega_bar.*L_vec_ans+u5,'all')-sum((M_delta.*Observed_vec),'all')/(sum(M_delta,'all'));
-    z5 = z5+omega_bar*M_val;
+    z5 = u5+omega_bar*M_val;
     
     u = u + K*L_vec_ans - [z1;z2;z3;z4;z5];
-    u1 = u(1:h_size,:);
-    u2 = u(h_size+1:2*h_size,:);
-    u3 = u(2*h_size+1:3*h_size,:);
-    u4 = u(3*h_size+1:4*h_size,:);
-    u5 = u(4*h_size+1:5*h_size,:);
+    u1 = u(1:h_size*w_size,:);
+    u2 = u(h_size*w_size+1:2*h_size*w_size,:);
+    u3 = u(2*h_size*w_size+1:3*h_size*w_size,:);
+    u4 = u(3*h_size*w_size+1:4*h_size*w_size,:);
+    u5 = u(4*h_size*w_size+1:5*h_size*w_size,:);
     %update
     
     Now_val = u ;
