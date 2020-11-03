@@ -62,10 +62,11 @@ Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 
 
 %% 2:Initialization of Some Variables
-omega = Miss_mat_L;
-omega_bar = Miss_mat_L==0;
+omega = reshape(Miss_mat_L,h_size*w_size,1);
+omega_bar = reshape(Miss_mat_L==0,h_size*w_size,1);
 M_delta = zeros(h_size,w_size);
 M_delta(106:135,105:135) = 1;
+M_delta = reshape(M_delta,h_size*w_size,1);
 M_delta = M_delta - omega_bar;
 
 %あとでベクトル化する
@@ -95,7 +96,7 @@ stopcri = 1e-4; % stopping criterion
 maxiter = 100; % maximum number of iteration
 
 I=ones(h_size,w_size);
-I_cheby=speye(int32(w_size/2),int32(h_size/2));
+I_cheby=reshape(speye(int32(w_size/2),int32(h_size/2)),w_size/2*h_size/2,1);
 
 max_level = 1;
 Q=zeros(int32(w_size/2),int32(h_size/2));
@@ -109,7 +110,7 @@ disp('ADMM is running...');
 for i = 1:maxiter
     %G=3*I+Miss_mat_L;
     %G=1./G;
-    L_vec_ans = (K'*K)\K'.*(z-u);
+    L_vec_ans = (K'*K)\K'*(z-u);
     %prox:nuclear norm
     if CPA_SVS == 1
         %----The singular value shrinkage using the CPA-based method----
