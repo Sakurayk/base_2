@@ -23,8 +23,8 @@ I = rgb2gray(RGB);
 %----The size of the data is determined----
 %h_size = size(I_2,1);
 %w_size = size(I_2,2);
-h_size = 60;%The horizontal size of the data (its default size is 1000)
-w_size = 60;%The vertical size of the data (its default size is 1000)
+h_size = 120;%The horizontal size of the data (its default size is 1000)
+w_size = 120;%The vertical size of the data (its default size is 1000)
 %square image
 targetsize = [h_size,w_size];
 %if rem(size(I,1),2)==1
@@ -64,7 +64,7 @@ Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 omega = reshape(Miss_mat_L,h_size*w_size,1);
 omega_bar = reshape(Miss_mat_L==0,h_size*w_size,1);
 M_delta = zeros(h_size,w_size);
-M_delta(28:37,28:37) = 1;
+M_delta(40:60,40:60) = 1;
 M_delta = reshape(M_delta,h_size*w_size,1);
 M_delta = M_delta - omega_bar;
 
@@ -77,11 +77,11 @@ T = dwt2(dct2(Observed_image),'haar');
 Observed_vec = reshape(Observed_image,h_size*w_size,1);
 dct_observed = dct2(Observed_image);
 
-K1 = eye(h_size*w_size,h_size*w_size);
-K2 = dctmtx(h_size*w_size);
-K3 = diag(reshape(Miss_mat_L,h_size*w_size,1));%omega
-K4 =eye(h_size*w_size,h_size*w_size);
-K5 =diag(reshape(Miss_mat_L==0,h_size*w_size,1));%omega_bar
+K1 = speye(h_size*w_size,h_size*w_size);
+K2 = sparse(dctmtx(h_size*w_size));
+K3 = sparse(diag(reshape(Miss_mat_L,h_size*w_size,1)));%omega
+K4 =speye(h_size*w_size,h_size*w_size);
+K5 =sparse(diag(reshape(Miss_mat_L==0,h_size*w_size,1)));%omega_bar
 K = [K1;K2;K3;K4;K5];
 z = K*I_vec;
 
@@ -123,7 +123,7 @@ for i = 1:maxiter
         if d==0
             d=100000;
         end
-        h = @(x)(svd_kernel(x,5));
+        h = @(x)(svd_kernel(x,4));
         Range = [0 d];
         Coeff=chebyshev_coefficient(h, Approx_order,Range);%Chebyshev coefficients are derived
         Q_hat = chebyshev_oprator(I_cheby,Q,Coeff,Range);%Singular value shrinkage is performed by using CPA
