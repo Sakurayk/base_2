@@ -12,6 +12,6 @@ A = read_image;
 %Miss_vec = Miss_pre_mat(:);
 %Miss_mat = reshape(Miss_vec(randperm(h_size*w_size)),[h_size,w_size]);
 Miss_mat = ones(h_size,w_size);
-Miss_mat(35:65,35:65) = 0;
+Miss_mat(25:35,25:35) = 0;
 
 Observed_mat = double(A).*Miss_mat;

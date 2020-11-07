@@ -23,8 +23,8 @@ I = rgb2gray(RGB);
 %----The size of the data is determined----
 %h_size = size(I_2,1);
 %w_size = size(I_2,2);
-h_size = 120;%The horizontal size of the data (its default size is 1000)
-w_size = 120;%The vertical size of the data (its default size is 1000)
+h_size = 50;%The horizontal size of the data (its default size is 1000)
+w_size = 50;%The vertical size of the data (its default size is 1000)
 %square image
 targetsize = [h_size,w_size];
 %if rem(size(I,1),2)==1
@@ -64,7 +64,7 @@ Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 omega = reshape(Miss_mat_L,h_size*w_size,1);
 omega_bar = reshape(Miss_mat_L==0,h_size*w_size,1);
 M_delta = zeros(h_size,w_size);
-M_delta(40:60,40:60) = 1;
+M_delta(20:40,20:40) = 1;
 M_delta = reshape(M_delta,h_size*w_size,1);
 M_delta = M_delta - omega_bar;
 
@@ -123,7 +123,7 @@ for i = 1:maxiter
         if d==0
             d=100000;
         end
-        h = @(x)(svd_kernel(x,4));
+        h = @(x)(svd_kernel(x,6));
         Range = [0 d];
         Coeff=chebyshev_coefficient(h, Approx_order,Range);%Chebyshev coefficients are derived
         Q_hat = chebyshev_oprator(I_cheby,Q,Coeff,Range);%Singular value shrinkage is performed by using CPA
@@ -137,7 +137,7 @@ for i = 1:maxiter
         A_z_1 = L_vec_ans + u1;
         [S_l,D,VT]= svd(reshape(A_z_1,targetsize));
         D2=diag(D);
-        D2=diag(sign(D2).*max(abs(D2)-0.1,0));
+        D2=diag(sign(D2).*max(abs(D2)-6,0));
         z1 = reshape(S_l*D2*VT',h_size*w_size,1);
     end
     
@@ -157,7 +157,7 @@ for i = 1:maxiter
     z4 = C;
     
     M_val = mean(omega_bar.*L_vec_ans+u5,'all')-sum((M_delta.*Observed_vec),'all')/(sum(M_delta,'all'));
-    z5 = u5+omega_bar*M_val;
+    z5 = u5+omega_bar*abs(M_val);
     
     u = u + K*L_vec_ans - [z1;z2;z3;z4;z5];
     u1 = u(1:h_size*w_size,:);
@@ -190,11 +190,12 @@ title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 if CPA_SVS == 1
     subplot(2,2,3)
     result_image = reshape(L_vec_ans,[h_size,w_size]);
-    imshow(uint8(L_vec_ans))
+    imshow(uint8(result_image))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    imshow(uint8(L_vec_ans))
+    result_image = reshape(L_vec_ans,[h_size,w_size]);
+    imshow(uint8(result_image));
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 
