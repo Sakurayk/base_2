@@ -17,9 +17,9 @@ addpath Tools
 
 %% 1:User Settings
 %----The size of the data is determined----
-w_size = 128;%The vertical size of the data (its default size is 1000)
-h_size = 128;
-RGB = imread('modern-hexagonal-glowing-blue-medical-background-texture-pattern-honeycombs-different-level-d-rendering-illustration-futuristic-165624902.jpg');
+w_size = 1000;%The vertical size of the data (its default size is 1000)
+h_size = 1000;
+RGB = imread('Red-brick-wall-texture-3.jpg');
 I_2 = rgb2gray(RGB);
 [I_R,I_G,I_B] = imsplit(RGB);
 %----The size of the data is determined----
@@ -35,7 +35,7 @@ Miss_percent = Miss_rate/100;
 [V_RGB,L,Ground_Truth]=create_synthetic_data(h_size,w_size,Miss_percent,rank);
 
 %----The used method is selected----
-CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
@@ -145,16 +145,16 @@ disp('------------------------------Results------------------------------')
 disp('The results are shown.');
 figure
 subplot(2,2,1)
-imshow(cast(Ground_Truth,'uint8'))
+imshow(hsv2rgb(Ground_Truth))
 title({'Original data';['[Matrix rank:', num2str(rank),']']})
 
 subplot(2,2,2)
-imshow(cast(V_RGB,'uint8'))
+imshow(hsv2rgb(V_RGB))
 title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 
 if CPA_SVS == 1
     subplot(2,2,3)
-    imshow(cast(U_RGB,'uint8'))
+    imshow(hsv2rgb(U_RGB))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
