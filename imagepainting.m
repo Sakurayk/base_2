@@ -44,7 +44,7 @@ Miss_percent = Miss_rate/100;
 [Observed_image,Miss_mat_L,Original_data_I]=create_synthetic_data_2(h_size,w_size,Miss_percent,rank,I_2);
 
 %----The used method is selected----
-CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
