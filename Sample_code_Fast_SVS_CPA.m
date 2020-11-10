@@ -17,8 +17,8 @@ addpath Tools
 
 %% 1:User Settings
 %----The size of the data is determined----
-w_size = 1000;%The vertical size of the data (its default size is 1000)
-h_size = 1000;
+w_size = 250;%The vertical size of the data (its default size is 1000)
+h_size = 250;
 RGB = imread('Red-brick-wall-texture-3.jpg');
 I_2 = rgb2gray(RGB);
 [I_R,I_G,I_B] = imsplit(RGB);
