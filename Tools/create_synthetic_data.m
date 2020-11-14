@@ -13,8 +13,8 @@ rectangle = centerCropWindow2d([size(RGB,1),size(RGB,2)],targetsize);
 RGB = imcrop(RGB,rectangle);
 A = double(RGB);
 %RGB2HSV
-A = rgb2hsv(RGB);
-A = double(A);
+%A = rgb2hsv(RGB);
+%A = double(A);
 [A_R,A_G,A_B] = imsplit(A);
 %A = abs(A-1); %ここを変えれば行けるのか?
 w_size_miss = int32(w_size*Miss_rate);

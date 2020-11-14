@@ -44,7 +44,7 @@ Miss_percent = Miss_rate/100;
 [Observed_image,Miss_mat_L,Original_data_I]=create_synthetic_data_2(h_size,w_size,Miss_percent,rank,I_2);
 
 %----The used method is selected----
-CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
@@ -142,11 +142,11 @@ for k=1:3
 
         %l1norm  
         B=K2*L_vec_ans+u2;
-        z2 = sign(B).*max(abs(B)-0.01,0);
+        z2 = sign(B).*max(abs(B)-0.1,0);
 
 
         %prox:Indicator
-        z3 = Observed_vec;
+        z3 =Observed_vec+omega_bar.*(L_vec_ans+u3);
         %元のピクセルを維持する
 
         %prox:range
@@ -180,21 +180,20 @@ disp('------------------------------Results------------------------------')
 disp('The results are shown.');
 figure
 subplot(2,2,1)
-imshow(hsv2rgb(Original_data_I))
+imshow(uint8(hsv2rgb(Original_data_I)))
 title({'Original data';['[Matrix rank:', num2str(rank),']']})
 
 subplot(2,2,2)
-imshow(hsv2rgb(Observed_image))
+imshow(uint8(hsv2rgb(Observed_image)))
 title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 
 if CPA_SVS == 1
     subplot(2,2,3)
-    imshow(hsv2rgb(U_RGB))
+    imshow(uint8(hsv2rgb(U_RGB)))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    result_image = reshape(L_vec_ans,[h_size,w_size]);
-    imshow(uint8(result_image));
+    imshow(uint8(hsv2rgb(U_RGB)))
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 

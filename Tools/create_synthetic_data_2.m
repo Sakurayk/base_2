@@ -7,16 +7,22 @@ function [Observed_mat,Miss_mat,A] = create_synthetic_data_2(h_size,w_size,Miss_
 %end
 
 %A = abs(A-1); %ここを変えれば行けるのか?
-A = read_image;
+RGB = read_image;
 %RGB2HSV
-A = rgb2hsv(A);
+targetsize = [h_size,w_size];
+rectangle = centerCropWindow2d([size(RGB,1),size(RGB,2)],targetsize);
+A = imcrop(RGB,rectangle);
+A = double(A);
+
+%A = rgb2hsv(A);
 A = double(A);
 [A_1,A_2,A_3] = imsplit(A);
+
 %Miss_pre_mat = [ones(h_size,w_size-w_size_miss),zeros(h_size,w_size_miss)];
 %Miss_vec = Miss_pre_mat(:);
 %Miss_mat = reshape(Miss_vec(randperm(h_size*w_size)),[h_size,w_size]);
 Miss_mat = ones(h_size,w_size);
-Miss_mat(25:35,25:35) = 0;
+Miss_mat(20:100,20:100) = 0;
 
 Observed_mat_1 = double(A_1).*Miss_mat;
 Observed_mat_2 = double(A_2).*Miss_mat;

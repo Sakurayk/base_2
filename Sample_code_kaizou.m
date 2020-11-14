@@ -1,41 +1,28 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Demo: Fast singular value shrinkage using the exact method for synthetic data
-% Note: This exmeriments were conducted at Section V-F in the following
-%           paper.
-%
-% Author: Masaki Onuki (masaki.o@msp-lab.org)
-% Last version: Aug 17, 2017
-% Article: M. Onuki, S. Ono, K. Shirai, Y. Tanaka,
-% "Fast Singular Value Shrinkage with Chebyshev Polynomial Approximation Based on Signal Sparsity,"
-% IEEE Transactions on Signal Processing (submitted).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 clc
 clearvars
 close all
 addpath Tools
 
 %% 1:User Settings
+imname = 'Red-brick-wall-texture-3.jpg';
+RGB = imread(imname);
 %----The size of the data is determined----
-w_size = 250;%The vertical size of the data (its default size is 1000)
-h_size = 250;
-RGB = imread('Red-brick-wall-texture-3.jpg');
-I_2 = rgb2gray(RGB);
-[I_R,I_G,I_B] = imsplit(RGB);
-%----The size of the data is determined----
-%h_size = size(I_2,1);
-%w_size = size(I_2,2);
+%h_size = size(RGB,1);
+%w_size = size(RGB,2);
+w_size = 300;%The vertical size of the data (its default size is 1000)
+h_size = 300;
+target_size = [h_size,w_size];
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
-Miss_rate = 30;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
+Miss_rate = 50;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
 
 Miss_percent = Miss_rate/100;
 
 %----The synthetic data used in this experiment is created----
-[V_RGB,L,Ground_Truth]=create_synthetic_data(h_size,w_size,Miss_percent,rank);
+[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/02101.png",target_size);
 
 %----The used method is selected----
-CPA_SVS = 0;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
+CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
 
 if CPA_SVS == 1
     disp('The CPA-based method is selected for this experiment.')
@@ -48,7 +35,7 @@ else
 end
 
 %----If you select CPA_SVS = 1, you could change the approximation order for CPA----
-Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
+Approx_order = 5;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 U_RGB = zeros(h_size,w_size,3);
 
 for k=1:3
@@ -66,7 +53,7 @@ for k=1:3
     d4 = ones(h_size,w_size);
 
     stopcri = 1e-4; % stopping criterion
-    maxiter = 200; % maximum number of iteration
+    maxiter = 1000; % maximum number of iteration
 
     I=ones(h_size,w_size);
     I_cheby=speye(w_size/2,w_size/2);
@@ -145,20 +132,20 @@ disp('------------------------------Results------------------------------')
 disp('The results are shown.');
 figure
 subplot(2,2,1)
-imshow(hsv2rgb(Ground_Truth))
+imshow(uint8(hsv2rgb(Ground_Truth)*255))
 title({'Original data';})
 
 subplot(2,2,2)
-imshow(hsv2rgb(V_RGB))
+imshow(uint8(hsv2rgb(V_RGB)*255))
 title({'Corrupted data';['[Corruption rate:', num2str(Miss_rate), '%]']})
 
 if CPA_SVS == 1
     subplot(2,2,3)
-    imshow(hsv2rgb(U_RGB))
+    imshow(uint8(hsv2rgb(U_RGB)*255))
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    imshow(hsv2rgb(U_RGB))
+    imshow(uint8(U_RGB))
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 
