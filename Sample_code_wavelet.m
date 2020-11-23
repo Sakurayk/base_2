@@ -1,38 +1,25 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Demo: Fast singular value shrinkage using the exact method for synthetic data
-% Note: This exmeriments were conducted at Section V-F in the following
-%           paper.
-%
-% Author: Masaki Onuki (masaki.o@msp-lab.org)
-% Last version: Aug 17, 2017
-% Article: M. Onuki, S. Ono, K. Shirai, Y. Tanaka,
-% "Fast Singular Value Shrinkage with Chebyshev Polynomial Approximation Based on Signal Sparsity,"
-% IEEE Transactions on Signal Processing (submitted).
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 clc
 clearvars
 close all
 addpath Tools
 
 %% 1:User Settings
+imname = 'fallguys.jpg';
+RGB = imread(imname);
 %----The size of the data is determined----
-w_size = 250;%The vertical size of the data (its default size is 1000)
-h_size = 250;
-RGB = imread('icon_amana.jpg');
-I_2 = rgb2gray(RGB);
-[I_R,I_G,I_B] = imsplit(RGB);
-%----The size of the data is determined----
-%h_size = size(I_2,1);
-%w_size = size(I_2,2);
+%h_size = size(RGB,1);
+%w_size = size(RGB,2);
+w_size = 160;%The vertical size of the data (its default size is 1000)
+h_size = 160;
+target_size = [h_size,w_size];
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
-Miss_rate = 20;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
+Miss_rate = 50;%The missing rate of the data (1, 10, or 20 is used for the missing rate)
 
 Miss_percent = Miss_rate/100;
 
 %----The synthetic data used in this experiment is created----
-[V_RGB,L,Ground_Truth]=create_synthetic_data(h_size,w_size,Miss_percent,rank);
+[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/01266.png",target_size);
 
 %----The used method is selected----
 CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
@@ -46,10 +33,13 @@ else
     error(Err_msg);
     return;
 end
-
+disp(['default RMSE:',num2str(immse(V_RGB,Ground_Truth))])
 %----If you select CPA_SVS = 1, you could change the approximation order for CPA----
-Approx_order = 20;% Approx_order = 5, 10, 15, or 20 is used in this paper.
+Approx_order = 5;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 U_RGB = zeros(h_size,w_size,3);
+time = zeros(1,3);
+rmse = zeros(1,3);
+tstart = tic;
 
 for k=1:3
     %% 2:Initialization of Some Variables
@@ -57,16 +47,16 @@ for k=1:3
     U = U_RGB(:,:,k);
     Old_val = ones(h_size,w_size);
     z1 = ones(h_size,w_size);
-    z2 = dct2(ones(h_size,w_size));
+    %z2 = dwt2(ones(h_size,w_size),'haar');
     z3 = ones(h_size,w_size);
     z4 = ones(h_size,w_size);
     d1 = ones(h_size,w_size);
-    d2 = dct2(ones(h_size,w_size));
+    %d2 = dwt2(ones(h_size,w_size),'haar');
     d3 = ones(h_size,w_size);
     d4 = ones(h_size,w_size);
 
     stopcri = 1e-4; % stopping criterion
-    maxiter = 200; % maximum number of iteration
+    maxiter = 1000; % maximum number of iteration
 
     I=ones(h_size,w_size);
     I_cheby=speye(w_size/2,w_size/2);
@@ -74,15 +64,14 @@ for k=1:3
     max_level = 1;
     Q=zeros(w_size/2,h_size/2);
     Q_hat=zeros(w_size/2,h_size/2);
-
     %% 3:Optimization
-    disp('------------------------------Optimization------------------------------')
-    disp('ADMM is running...');
-
+    tic
     for i = 1:maxiter
         G=3*I+L;
         G=1./G;
-        U = G.*((z1+idct2(z2)+L.*z3+z4)-d1-idct2(d2)-L.*d3-d4);
+        U = G.*((z1+idwt2(z2,zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),'haar')...
+            +L.*z3+z4)-d1-idwt2(d2,zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),'haar')...
+            -L.*d3-d4);
 
 
         %prox:nuclear norm
@@ -95,7 +84,7 @@ for k=1:3
             if d==0
                 d=100000;
             end
-            h = @(x)(svd_kernel(x,6));
+            h = @(x)(svd_kernel(x,5));
             Range = [0 d];
             Coeff=chebyshev_coefficient(h, Approx_order,Range);%Chebyshev coefficients are derived
             Q_hat = chebyshev_oprator(I_cheby,Q,Coeff,Range);%Singular value shrinkage is performed by using CPA
@@ -108,12 +97,12 @@ for k=1:3
             A=U+d1;
             [S_l,D,VT]=svd(A);
             D2=diag(D);
-            D2=diag(sign(D2).*max(abs(D2)-6,0));
+            D2=diag(sign(D2).*max(abs(D2)-0.5,0));
             z1 = S_l*D2*VT';
         end
 
         %prox:L1 norm
-        B=dct2(U)+d2;
+        B=dwt2(U,'haar')+d2;
         z2 = sign(B).*max(abs(B)-0.1,0);
 
         %prox:Indicator
@@ -127,7 +116,7 @@ for k=1:3
 
         %update
         d1 = d1+U-z1;
-        d2 = d2+dct2(U)-z2;
+        d2 = d2+dwt2(U,'haar')-z2;
         d3 = d3+L.*U-z3;
         d4 = d4+ U - z4;
 
@@ -138,10 +127,18 @@ for k=1:3
             break;
         end
     end
+    time(k) = toc;
     U_RGB(:,:,k) = U;
+    rmse(k) = immse(U,Ground_Truth(:,:,k));
 end
 %% 4:Representation of the results
-disp('------------------------------Results------------------------------')
+disp(['rmse:',num2str(immse(U_RGB,Ground_Truth))])
+disp('--rmse--')
+disp(rmse)
+disp(['psnr:',num2str(psnr(U_RGB,Ground_Truth))])
+disp('--time--')
+disp(time)
+disp(['total:',num2str(sum(time))])
 disp('The results are shown.');
 figure
 subplot(2,2,1)
@@ -158,7 +155,7 @@ if CPA_SVS == 1
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    imshow(hsv2rgb(U_RGB))
+    imshow(uint8(hsv2rgb(U_RGB)*255))
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 

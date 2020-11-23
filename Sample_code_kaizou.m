@@ -4,13 +4,13 @@ close all
 addpath Tools
 
 %% 1:User Settings
-imname = 'Red-brick-wall-texture-3.jpg';
+imname = 'fallguys.jpg';
 RGB = imread(imname);
 %----The size of the data is determined----
 %h_size = size(RGB,1);
 %w_size = size(RGB,2);
-w_size = 300;%The vertical size of the data (its default size is 1000)
-h_size = 300;
+w_size = 160;%The vertical size of the data (its default size is 1000)
+h_size = 160;
 target_size = [h_size,w_size];
 %----The rank and missing rate for the data is determined----
 rank = 10;% The rank of the data (10, 20, or  200 is used for the rank)
@@ -19,7 +19,7 @@ Miss_rate = 50;%The missing rate of the data (1, 10, or 20 is used for the missi
 Miss_percent = Miss_rate/100;
 
 %----The synthetic data used in this experiment is created----
-[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/02101.png",target_size);
+[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/01266.png",target_size);
 
 %----The used method is selected----
 CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
@@ -33,10 +33,13 @@ else
     error(Err_msg);
     return;
 end
-
+disp(['default RMSE:',num2str(immse(V_RGB,Ground_Truth))])
 %----If you select CPA_SVS = 1, you could change the approximation order for CPA----
 Approx_order = 5;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 U_RGB = zeros(h_size,w_size,3);
+time = zeros(1,3);
+rmse = zeros(1,3);
+tstart = tic;
 
 for k=1:3
     %% 2:Initialization of Some Variables
@@ -61,11 +64,8 @@ for k=1:3
     max_level = 1;
     Q=zeros(w_size/2,h_size/2);
     Q_hat=zeros(w_size/2,h_size/2);
-
     %% 3:Optimization
-    disp('------------------------------Optimization------------------------------')
-    disp('ADMM is running...');
-
+    tic
     for i = 1:maxiter
         G=3*I+L;
         G=1./G;
@@ -125,10 +125,18 @@ for k=1:3
             break;
         end
     end
+    time(k) = toc;
     U_RGB(:,:,k) = U;
+    rmse(k) = immse(U,Ground_Truth(:,:,k));
 end
 %% 4:Representation of the results
-disp('------------------------------Results------------------------------')
+disp(['rmse:',num2str(immse(U_RGB,Ground_Truth))])
+disp('--rmse--')
+disp(rmse)
+disp(['psnr:',num2str(psnr(U_RGB,Ground_Truth))])
+disp('--time--')
+disp(time)
+disp(['total:',num2str(sum(time))])
 disp('The results are shown.');
 figure
 subplot(2,2,1)
@@ -145,7 +153,7 @@ if CPA_SVS == 1
     title({'Resulting data (CPA-based method)';['[Approximation order:', num2str(Approx_order),']'];['[Number of iterations:', num2str(i),']']})
 elseif CPA_SVS == 0
     subplot(2,2,3)
-    imshow(uint8(U_RGB))
+    imshow(uint8(hsv2rgb(U_RGB)*255))
     title({'Resulting data (Exact method)';['[Number of iterations:', num2str(i),']']})
 end
 
