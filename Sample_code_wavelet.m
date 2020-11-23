@@ -19,7 +19,7 @@ Miss_rate = 50;%The missing rate of the data (1, 10, or 20 is used for the missi
 Miss_percent = Miss_rate/100;
 
 %----The synthetic data used in this experiment is created----
-[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/01266.png",target_size);
+[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./testing_mask_dataset/00017.png",target_size);
 
 %----The used method is selected----
 CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
@@ -39,6 +39,7 @@ Approx_order = 5;% Approx_order = 5, 10, 15, or 20 is used in this paper.
 U_RGB = zeros(h_size,w_size,3);
 time = zeros(1,3);
 rmse = zeros(1,3);
+[LoD,HiD] = wfilters('haar','d');
 tstart = tic;
 
 for k=1:3
@@ -47,11 +48,11 @@ for k=1:3
     U = U_RGB(:,:,k);
     Old_val = ones(h_size,w_size);
     z1 = ones(h_size,w_size);
-    %z2 = dwt2(ones(h_size,w_size),'haar');
+    z2 = ones(h_size,w_size);
     z3 = ones(h_size,w_size);
     z4 = ones(h_size,w_size);
     d1 = ones(h_size,w_size);
-    %d2 = dwt2(ones(h_size,w_size),'haar');
+    d2 = ones(h_size,w_size);
     d3 = ones(h_size,w_size);
     d4 = ones(h_size,w_size);
 
@@ -69,9 +70,7 @@ for k=1:3
     for i = 1:maxiter
         G=3*I+L;
         G=1./G;
-        U = G.*((z1+idwt2(z2,zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),'haar')...
-            +L.*z3+z4)-d1-idwt2(d2,zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),zeros(w_size/2,h_size/2),'haar')...
-            -L.*d3-d4);
+        U = G.*((z1+z2+L.*z3+z4)-d1-d2-L.*d3-d4);
 
 
         %prox:nuclear norm
@@ -102,8 +101,9 @@ for k=1:3
         end
 
         %prox:L1 norm
-        B=dwt2(U,'haar')+d2;
-        z2 = sign(B).*max(abs(B)-0.1,0);
+        B= U + d2;
+        [cA,cH,cV,cD] = dwt2(B,LoD,HiD,'haar','spd');
+        z2 = idwt2(cA,cH,cV,cD,'haar');
 
         %prox:Indicator
         z3=V;
@@ -116,7 +116,7 @@ for k=1:3
 
         %update
         d1 = d1+U-z1;
-        d2 = d2+dwt2(U,'haar')-z2;
+        d2 = d2+U -z2;
         d3 = d3+L.*U-z3;
         d4 = d4+ U - z4;
 

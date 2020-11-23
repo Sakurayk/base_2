@@ -19,7 +19,7 @@ Miss_rate = 50;%The missing rate of the data (1, 10, or 20 is used for the missi
 Miss_percent = Miss_rate/100;
 
 %----The synthetic data used in this experiment is created----
-[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./mask/testing_mask_dataset/01266.png",target_size);
+[V_RGB,L,Ground_Truth] = Synthesize_pic(imname,"./testing_mask_dataset/00017.png",target_size);
 
 %----The used method is selected----
 CPA_SVS = 1;% The CPA-based method is used if CPA_SVS = 1, or the exact method is used if CPA_SVS = 0.
@@ -59,7 +59,7 @@ for k=1:3
     maxiter = 1000; % maximum number of iteration
 
     I=ones(h_size,w_size);
-    I_cheby=speye(w_size/2,w_size/2);
+    I_cheby=speye(w_size/2,h_size/2);
 
     max_level = 1;
     Q=zeros(w_size/2,h_size/2);
